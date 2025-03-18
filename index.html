@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جدول المهام</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>جدول المهام اليومية</h1>
+
+    <!-- نموذج إضافة المهام -->
+    <form id="taskForm">
+        <input type="date" id="day" >
+        <input type="time" id="time" >
+        <input type="text" id="type" placeholder="نوع المهمة" >
+        <input type="text" id="location" placeholder="موقع المهمة" >
+        <input type="text" id="required" placeholder="المطلوب" >
+        <input type="text" id="group" placeholder="اسم المجموعة" >
+        <label><input type="checkbox" id="isFixed"> مهمة ثابتة</label>
+        <button type="submit">إضافة</button>
+    </form>
+
+    <!-- فلتر البحث -->
+    <div>
+        <label>فلتر المهام من تاريخ:</label>
+        <input type="date" id="filterDate" onchange="filterTasks()">
+    </div>
+
+    <!-- الجدول -->
+    <table id="taskTable">
+        <thead>
+            <tr>
+                <th>اليوم والتاريخ</th>
+                <th>الساعة</th>
+                <th>نوع المهمة</th>
+                <th>موقع المهمة</th>
+                <th>المطلوب</th>
+                <th>المجموعة</th>
+                <th>إجراءات</th>
+            </tr>
+        </thead>
+        <tbody id="taskTableBody"></tbody>
+    </table>
+
+    <!-- رابط لصفحة المهام المتغيرة -->
+    <a href="variable_tasks.html">عرض المهام المتغيرة</a>
+
+    <!-- أزرار الإرسال والطباعة -->
+    <button onclick="sendToManager()">إرسال للمدير</button>
+    <button onclick="printTable()">طباعة</button>
+
+    <script src="script.js"></script>
+</body>
+</html>

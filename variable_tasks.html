@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المهام المتغيرة</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>المهام المتغيرة</h1>
+
+    <!-- جدول المهام المتغيرة -->
+    <table id="variableTaskTable">
+        <thead>
+            <tr>
+                <th>اليوم والتاريخ</th>
+                <th>الساعة</th>
+                <th>نوع المهمة</th>
+                <th>موقع المهمة</th>
+                <th>المطلوب</th>
+                <th>المجموعة</th>
+                <th>إجراءات</th>
+            </tr>
+        </thead>
+        <tbody id="variableTaskTableBody"></tbody>
+    </table>
+
+    <!-- زر الطباعة -->
+    <button onclick="printTable()">طباعة</button>
+
+    <!-- رابط للعودة إلى الصفحة الرئيسية -->
+    <a href="index.html">العودة إلى الجدول الرئيسي</a>
+
+    <script src="script.js"></script>
+</body>
+</html>
