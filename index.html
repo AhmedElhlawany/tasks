@@ -5,18 +5,76 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>جدول المهام</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- إضافة مكتبة jsPDF و html2canvas من CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body {
+            direction: rtl;
+            font-family: Arial, sans-serif;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+            font-size: 12px;
+        }
+        th {
+            background-color: #0066CC;
+            color: white;
+        }
+        #instructions {
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        #instructions p {
+            font-weight: bold;
+        }
+        #instructions ul {
+            list-style-type: disc;
+            padding-right: 20px;
+        }
+        #pdfContent {
+            position: absolute;
+            top: -9999px; /* إخفاء خارج الشاشة */
+            width: 100%; /* ضمان العرض */
+            left: 0;
+        }
+        .task-table-container {
+            margin-bottom: 30px;
+        }
+        .task-table-title {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .right-align {
+            text-align: left; /* محاذاة إلى اليمين في اتجاه RTL */
+        }
+    </style>
 </head>
 <body>
-    <h1>جدول المهام اليومية</h1>
+    <ul>
+        <li> السرية االولى </li>
+        <li>فصيل (ق)1</li>
+        <li>مجموعة (د7) 1</li>
+    </ul>
+    <h2>بيان بالمهام المكلفة بها قوة المهمات والواجبات الخاصة ليوم الثالثاء الموافق 1446/8/5هـ</h2>
 
     <!-- نموذج إضافة المهام -->
     <form id="taskForm">
-        <input type="date" id="day" >
-        <input type="time" id="time" >
-        <input type="text" id="type" placeholder="نوع المهمة" >
-        <input type="text" id="location" placeholder="موقع المهمة" >
-        <input type="text" id="required" placeholder="المطلوب" >
-        <input type="text" id="group" placeholder="اسم المجموعة" >
+        <input type="date" id="day" required>
+        <input type="text" id="time" placeholder="الساعة (مثال: 2:30 مساءً - التفاصيل)" required>
+        <input type="text" id="type" placeholder="نوع المهمة" required>
+        <input type="text" id="location" placeholder="موقع المهمة" required>
+        <input type="text" id="required" placeholder="المطلوب" required>
+        <input type="text" id="group" placeholder="اسم المجموعة" required>
         <label><input type="checkbox" id="isFixed"> مهمة ثابتة</label>
         <button type="submit">إضافة</button>
     </form>
@@ -27,21 +85,11 @@
         <input type="date" id="filterDate" onchange="filterTasks()">
     </div>
 
-    <!-- الجدول -->
-    <table id="taskTable">
-        <thead>
-            <tr>
-                <th>اليوم والتاريخ</th>
-                <th>الساعة</th>
-                <th>نوع المهمة</th>
-                <th>موقع المهمة</th>
-                <th>المطلوب</th>
-                <th>المجموعة</th>
-                <th>إجراءات</th>
-            </tr>
-        </thead>
-        <tbody id="taskTableBody"></tbody>
-    </table>
+    <!-- حاوية الجداول -->
+    <div id="content"></div>
+
+    <!-- عنصر مؤقت لإنشاء PDF -->
+    <div id="pdfContent"></div>
 
     <!-- رابط لصفحة المهام المتغيرة -->
     <a href="variable_tasks.html">عرض المهام المتغيرة</a>

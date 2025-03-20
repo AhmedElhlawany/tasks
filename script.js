@@ -1,13 +1,17 @@
 // تهيئة البيانات من Local Storage أو إنشاء بيانات افتراضية
 let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
 
-// تحويل الساعة إلى نظام 12 ساعة
+// تحويل الساعة إلى نظام 12 ساعة إذا أمكن
 function formatTimeTo12Hour(time) {
-    const [hours, minutes] = time.split(':');
-    let hour = parseInt(hours);
-    const period = hour >= 12 ? 'مساءً' : 'صباحًا';
-    hour = hour % 12 || 12;
-    return `${hour}:${minutes} ${period}`;
+    const timeMatch = time.match(/(\d{1,2}):(\d{2})/);
+    if (timeMatch) {
+        const [_, hours, minutes] = timeMatch;
+        let hour = parseInt(hours);
+        const period = hour >= 12 ? 'مساءً' : 'صباحًا';
+        hour = hour % 12 || 12;
+        return time.replace(timeMatch[0], `${hour}:${minutes} ${period}`);
+    }
+    return time;
 }
 
 // تحويل التاريخ إلى التقويم الهجري
@@ -21,36 +25,121 @@ function formatToHijri(date) {
     return new Intl.DateTimeFormat('ar-SA', options).format(new Date(date));
 }
 
-// عرض الجدول في الصفحة الأولى
-function renderTable() {
-    const tbody = document.getElementById('taskTableBody');
-    if (!tbody) return; // للتأكد من أننا في الصفحة الصحيحة
-    tbody.innerHTML = '';
-    tasks.forEach((task, index) => {
-        const row = document.createElement('tr');
-        row.style.backgroundColor = task.color || '#ffffff'; // تطبيق اللون
-        row.innerHTML = `
-            <td>${formatToHijri(task.day)}</td>
-            <td>${formatTimeTo12Hour(task.time)}</td>
-            <td>${task.type}</td>
-            <td>${task.location}</td>
-            <td>${task.required}</td>
-            <td>${task.group}</td>
-            <td>
-                <button onclick="editTask(${index}, 'index.html')">تعديل</button>
-                <button onclick="deleteTask(${index})">حذف</button>
-                <input type="color" value="${task.color || '#ffffff'}" onchange="changeColor(${index}, this.value)">
-            </td>
-        `;
-        tbody.appendChild(row);
+// الحصول على اسم اليوم بالعربية
+function getDayName(date) {
+    const options = { weekday: 'long' };
+    return new Intl.DateTimeFormat('ar-SA', options).format(new Date(date));
+}
+
+// تجميع المهام حسب التاريخ
+function groupTasksByDate(tasks) {
+    const grouped = {};
+    tasks.forEach(task => {
+        const date = task.day;
+        if (!grouped[date]) {
+            grouped[date] = [];
+        }
+        grouped[date].push(task);
     });
+    return grouped;
+}
+
+// عرض الجداول في الصفحة الأولى
+function renderTable() {
+    const content = document.getElementById('content');
+    if (!content) return;
+    content.innerHTML = ''; // تنظيف المحتوى
+
+    const groupedTasks = groupTasksByDate(tasks);
+    Object.keys(groupedTasks).sort().forEach(date => {
+        const tasksForDate = groupedTasks[date];
+        const container = document.createElement('div');
+        container.className = 'task-table-container';
+
+        // إضافة العنوان
+        const title = document.createElement('h3');
+        title.className = 'task-table-title';
+        title.textContent = `جدول المهام ليوم ${getDayName(date)} الموافق ${formatToHijri(date)}`;
+        container.appendChild(title);
+
+        // إنشاء الجدول
+        const table = document.createElement('table');
+        table.innerHTML = `
+            <thead>
+                <tr>
+                    <th>اليوم والتاريخ</th>
+                    <th>الساعة</th>
+                    <th>نوع المهمة</th>
+                    <th>موقع المهمة</th>
+                    <th>المطلوب</th>
+                    <th>المجموعة</th>
+                    <th>إجراءات</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        `;
+        const tbody = table.querySelector('tbody');
+        tasksForDate.forEach((task, index) => {
+            const globalIndex = tasks.indexOf(task);
+            const row = document.createElement('tr');
+            row.style.backgroundColor = task.color || '#ffffff';
+            row.innerHTML = `
+                <td>${getDayName(date)} ${formatToHijri(date)}</td>
+                <td>${formatTimeTo12Hour(task.time)}</td>
+                <td>${task.type}</td>
+                <td>${task.location}</td>
+                <td>${task.required}</td>
+                <td>${task.group}</td>
+                <td>
+                    <button onclick="editTask(${globalIndex}, 'index.html')">تعديل</button>
+                    <button onclick="deleteTask(${globalIndex})">حذف</button>
+                    <input type="color" value="${task.color || '#ffffff'}" onchange="changeColor(${globalIndex}, this.value)">
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+        container.appendChild(table);
+        content.appendChild(container);
+    });
+
+    // إضافة التعليمات والعناوين الإضافية بعد الجداول مع المحاذاة إلى اليمين
+    const extraContent = `
+        <h2>ص/ ضباط خفر</h2>
+        <h2>رقباء الرسايا</h2>
+        <h2>ص/ للعمليات</h2>
+        <div id="instructions">
+            <p>السلام عليكم ورحمة الله وبركاته</p>
+            <p>تجدون اعلاه بيان بالمهام الاسبوعيه المراد تغطيتها امنيا من قبلكم بالاضافة للمهام الطارئه</p>
+            <p>لذا عليكم متابعة تغطيتها بالوقت المحدد دون اي ملاحظات مع التنيه على العموم بارتداء السلاح و التتجهيزات الميدانيه اللازمة لكل مهمة كالمتبع و التنسيق معنا بما يستجد أةل بأةل </p>
+            <p class="ins">ملاحظات هامة جدا يجب الاطلاع عليها و التقيد بها حرفيا اثناء الاستلام:-</p>
+            <ul>
+                <li> حراسة البوابة الرسمية . </li>
+                <li> مهام طارئة تصل بشكل مفاجئ يجب االستعداد لها. </li>
+                <li> التقيد بالتوجيهات واالوامر والعمل بها وتنفيذها بكل دقة اثناء تأديتها . </li>
+                <li> إعداد التقارير الالزمة لكل مهمة وتسليمها بعد االنتهاء منها مباشرة. </li>
+                <li> التسلح والتجهيز المناسب ويكون حسب نوع المهمة. </li>
+                <li> عند وجود أي مالحظة أثناء المهمة يجب إبالغ الضابط المستلم عن طريق غرفة العمليات أو االتصال المباشر بنا واخذ التوجيهات بهذا الشأن. </li>
+                <li> أخذ الحيطة والحذر واالحتياطات األمنية الالزمة من قبل الجميع. </li>
+                <li> يمنع الخروج أثناء االستلام ألي سبب وتكون المسئولية كاملة على الضابط المستلم </li>
+                <li> أي مهمة رسمية خالل االستلام على الضابط المستلم مباشرتها وعلى مسؤوليته شخصيا.ً </li>
+                <li> على الرقيب المستلم التعقيب على جميع المواقع المذكورة أعاله والتأكد على عدم وجود أي مالحظات في جميع المواقع والرفع لنا عن أي ش يء يستوجب الرفع في حينه. </li>
+                <li> في حال طلب مندوب للمشاركة بأي لجنة من قبل اإلدارات الحكومية بالمنطقة يكلف العدد الكافي من االفراد والدوريات من قبل الضابط المستلم وتحت مسؤوليته شخصياً وإشعارنا عن المهمة في حينها . </li>
+                <li> التقيد بالحضور بالوقت المحدد وعد االنصراف حتى أخذ التوجيه من العمليات </li>
+                <li> عدم تشغيل السيفتي أثناء التوجه للموقع والمغادرة منه. </li>
+            </ul>
+        </div>
+        <h2 class="right-align">قائد قوة المهمات و الواجبات الخاصة</h2>
+        <h2 class="right-align">عقيد /</h2>
+    `;
+    content.insertAdjacentHTML('beforeend', extraContent);
+
     saveToLocalStorage();
 }
 
 // عرض المهام المتغيرة في جدول بالصفحة المنفصلة مع الإجراءات
 function renderVariableTasks() {
     const tbody = document.getElementById('variableTaskTableBody');
-    if (!tbody) return; // للتأكد من أننا في الصفحة الصحيحة
+    if (!tbody) return;
     tbody.innerHTML = '';
     const variableTasks = tasks.filter(task => !task.isFixed);
     if (variableTasks.length === 0) {
@@ -59,11 +148,11 @@ function renderVariableTasks() {
         tbody.appendChild(row);
     } else {
         variableTasks.forEach((task, index) => {
-            const globalIndex = tasks.indexOf(task); // الحصول على الفهرس العام في قائمة tasks
+            const globalIndex = tasks.indexOf(task);
             const row = document.createElement('tr');
-            row.style.backgroundColor = task.color || '#ffffff'; // تطبيق اللون المحفوظ
+            row.style.backgroundColor = task.color || '#ffffff';
             row.innerHTML = `
-                <td>${formatToHijri(task.day)}</td>
+                <td>${getDayName(task.day)} ${formatToHijri(task.day)}</td>
                 <td>${formatTimeTo12Hour(task.time)}</td>
                 <td>${task.type}</td>
                 <td>${task.location}</td>
@@ -91,7 +180,7 @@ document.getElementById('taskForm')?.addEventListener('submit', function(e) {
         required: document.getElementById('required').value,
         group: document.getElementById('group').value,
         isFixed: document.getElementById('isFixed').checked,
-        color: '#ffffff' // اللون الافتراضي
+        color: '#ffffff'
     };
     tasks.push(task);
     renderTable();
@@ -112,7 +201,6 @@ function editTask(index, page) {
         tasks.splice(index, 1);
         renderTable();
     } else {
-        // إذا كنا في صفحة المهام المتغيرة، الانتقال إلى الصفحة الرئيسية مع تمرير الفهرس
         localStorage.setItem('editIndex', index);
         window.location.href = 'index.html';
     }
@@ -130,9 +218,9 @@ function loadEditTask() {
         document.getElementById('required').value = task.required;
         document.getElementById('group').value = task.group;
         document.getElementById('isFixed').checked = task.isFixed;
-        tasks.splice(editIndex, 1);
+        tasks.splice(index, 1);
         renderTable();
-        localStorage.removeItem('editIndex'); // إزالة الفهرس بعد التحميل
+        localStorage.removeItem('editIndex');
     }
 }
 
@@ -141,7 +229,7 @@ function deleteTask(index) {
     tasks.splice(index, 1);
     renderTable();
     renderVariableTasks();
-    saveToLocalStorage(); // التأكد من حفظ التغييرات
+    saveToLocalStorage();
 }
 
 // تغيير لون الصف
@@ -149,7 +237,7 @@ function changeColor(index, color) {
     tasks[index].color = color;
     renderTable();
     renderVariableTasks();
-    saveToLocalStorage(); // التأكد من حفظ اللون الجديد
+    saveToLocalStorage();
 }
 
 // حفظ البيانات في Local Storage
@@ -157,11 +245,171 @@ function saveToLocalStorage() {
     localStorage.setItem('tasks', JSON.stringify(tasks));
 }
 
-// إرسال إلى المدير عبر WhatsApp
+// إرسال الصفحة كـ PDF إلى WhatsApp بدون الـ inputs والـ buttons
 function sendToManager() {
-    const message = `جدول المهام:\n${tasks.map(t => `${formatToHijri(t.day)} - ${formatTimeTo12Hour(t.time)} - ${t.type} - ${t.location} - ${t.required} - ${t.group}`).join('\n')}`;
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
+    if (!window.jspdf || !window.html2canvas) {
+        alert('يرجى التأكد من تحميل مكتبات jsPDF و html2canvas. تأكد من اتصالك بالإنترنت.');
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const pdfContent = document.getElementById('pdfContent');
+    if (!pdfContent) {
+        alert('خطأ: عنصر #pdfContent غير موجود.');
+        return;
+    }
+    pdfContent.innerHTML = ''; // تنظيف المحتوى المؤقت
+
+    // إضافة القائمة العلوية
+    const topList = document.querySelector('body > ul');
+    if (topList) pdfContent.appendChild(topList.cloneNode(true));
+
+    // إضافة العنوان الرئيسي
+    const mainTitle = document.querySelector('body > h2');
+    if (mainTitle) pdfContent.appendChild(mainTitle.cloneNode(true));
+
+    // إضافة الجداول مع العناوين
+    const groupedTasks = groupTasksByDate(tasks);
+    Object.keys(groupedTasks).sort().forEach(date => {
+        const tasksForDate = groupedTasks[date];
+        const container = document.createElement('div');
+        container.className = 'task-table-container';
+
+        // إضافة العنوان
+        const title = document.createElement('h3');
+        title.className = 'task-table-title';
+        title.textContent = `جدول المهام ليوم ${getDayName(date)} الموافق ${formatToHijri(date)}`;
+        container.appendChild(title);
+
+        // إنشاء الجدول بدون عمود الإجراءات
+        const table = document.createElement('table');
+        table.style.width = '100%';
+        table.style.borderCollapse = 'collapse';
+        table.innerHTML = `
+            <thead>
+                <tr>
+                    <th>اليوم والتاريخ</th>
+                    <th>الساعة</th>
+                    <th>نوع المهمة</th>
+                    <th>موقع المهمة</th>
+                    <th>المطلوب</th>
+                    <th>المجموعة</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        `;
+        const tbody = table.querySelector('tbody');
+        tasksForDate.forEach(task => {
+            const row = document.createElement('tr');
+            row.style.backgroundColor = task.color || '#ffffff';
+            row.innerHTML = `
+                <td>${getDayName(date)} ${formatToHijri(date)}</td>
+                <td>${formatTimeTo12Hour(task.time)}</td>
+                <td>${task.type}</td>
+                <td>${task.location}</td>
+                <td>${task.required}</td>
+                <td>${task.group}</td>
+            `;
+            tbody.appendChild(row);
+        });
+        container.appendChild(table);
+        pdfContent.appendChild(container);
+    });
+
+    // إضافة التعليمات والعناوين الإضافية مع المحاذاة إلى اليمين
+    const extraContent = `
+        <h2>ص/ ضباط خفر</h2>
+        <h2>رقباء الرسايا</h2>
+        <h2>ص/ للعمليات</h2>
+        <div id="instructions">
+            <p>السلام عليكم ورحمة الله وبركاته</p>
+            <p>تجدون اعلاه بيان بالمهام الاسبوعيه المراد تغطيتها امنيا من قبلكم بالاضافة للمهام الطارئه</p>
+            <p>لذا عليكم متابعة تغطيتها بالوقت المحدد دون اي ملاحظات مع التنيه على العموم بارتداء السلاح و التتجهيزات الميدانيه اللازمة لكل مهمة كالمتبع و التنسيق معنا بما يستجد أةل بأةل </p>
+            <p class="ins">ملاحظات هامة جدا يجب الاطلاع عليها و التقيد بها حرفيا اثناء الاستلام:-</p>
+            <ul>
+                <li> حراسة البوابة الرسمية . </li>
+                <li> مهام طارئة تصل بشكل مفاجئ يجب االستعداد لها. </li>
+                <li> التقيد بالتوجيهات واالوامر والعمل بها وتنفيذها بكل دقة اثناء تأديتها . </li>
+                <li> إعداد التقارير الالزمة لكل مهمة وتسليمها بعد االنتهاء منها مباشرة. </li>
+                <li> التسلح والتجهيز المناسب ويكون حسب نوع المهمة. </li>
+                <li> عند وجود أي مالحظة أثناء المهمة يجب إبالغ الضابط المستلم عن طريق غرفة العمليات أو االتصال المباشر بنا واخذ التوجيهات بهذا الشأن. </li>
+                <li> أخذ الحيطة والحذر واالحتياطات األمنية الالزمة من قبل الجميع. </li>
+                <li> يمنع الخروج أثناء االستلام ألي سبب وتكون المسئولية كاملة على الضابط المستلم </li>
+                <li> أي مهمة رسمية خالل االستلام على الضابط المستلم مباشرتها وعلى مسؤوليته شخصيا.ً </li>
+                <li> على الرقيب المستلم التعقيب على جميع المواقع المذكورة أعاله والتأكد على عدم وجود أي مالحظات في جميع المواقع والرفع لنا عن أي ش يء يستوجب الرفع في حينه. </li>
+                <li> في حال طلب مندوب للمشاركة بأي لجنة من قبل اإلدارات الحكومية بالمنطقة يكلف العدد الكافي من االفراد والدوريات من قبل الضابط المستلم وتحت مسؤوليته شخصياً وإشعارنا عن المهمة في حينها . </li>
+                <li> التقيد بالحضور بالوقت المحدد وعد االنصراف حتى أخذ التوجيه من العمليات </li>
+                <li> عدم تشغيل السيفتي أثناء التوجه للموقع والمغادرة منه. </li>
+            </ul>
+        </div>
+        <h2 class="right-align">قائد قوة المهمات و الواجبات الخاصة</h2>
+        <h2 class="right-align">عقيد /</h2>
+    `;
+    pdfContent.insertAdjacentHTML('beforeend', extraContent);
+
+    // إضافة رابط "عرض المهام المتغيرة"
+    const variableLink = document.querySelector('a[href="variable_tasks.html"]');
+    if (variableLink) pdfContent.appendChild(variableLink.cloneNode(true));
+
+    // الانتظار قليلاً لضمان تحميل المحتوى قبل التقاطه
+    setTimeout(() => {
+        html2canvas(pdfContent, {
+            scale: 2, // زيادة الدقة
+            width: pdfContent.scrollWidth || 800, // ضمان العرض
+            height: pdfContent.scrollHeight || 1000, // ضمان الارتفاع
+            logging: true // تفعيل السجل للتصحيح
+        }).then((canvas) => {
+            console.log('Canvas Width:', canvas.width, 'Canvas Height:', canvas.height); // تصحيح
+            if (!canvas || canvas.width === 0 || canvas.height === 0) {
+                throw new Error('الـ Canvas فارغ أو غير صالح.');
+            }
+
+            const imgData = canvas.toDataURL('image/png', 0.9);
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+
+            const pageWidth = 210;
+            const pageHeight = 297;
+            const margin = 10;
+            const imgWidth = pageWidth - 2 * margin;
+            const imgHeight = canvas.height * imgWidth / canvas.width;
+            let heightLeft = imgHeight;
+            let position = margin;
+
+            if (!imgData || imgData.length < 100) {
+                throw new Error('بيانات الصورة غير صالحة أو فارغة.');
+            }
+
+            pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+            heightLeft -= (pageHeight - 2 * margin);
+
+            while (heightLeft > 0) {
+                pdf.addPage();
+                position = heightLeft - imgHeight + margin;
+                pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+                heightLeft -= (pageHeight - 2 * margin);
+            }
+
+            const pdfBlob = pdf.output('blob');
+            const pdfUrl = URL.createObjectURL(pdfBlob);
+            const message = `جدول المهام اليومية: يرجى تحميل ملف PDF من الرابط التالي\n${pdfUrl}`;
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+
+            const link = document.createElement('a');
+            link.href = pdfUrl;
+            link.download = 'جدول_المهام.pdf';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }).catch((error) => {
+            console.error('خطأ أثناء إنشاء PDF:', error);
+            alert('حدث خطأ أثناء إنشاء ملف PDF: ' + error.message);
+        });
+    }, 500); // تأخير 500 مللي ثانية لضمان تحميل المحتوى
 }
 
 // طباعة الجدول
@@ -180,34 +428,63 @@ function filterTasks() {
         return taskDate >= filterDate && taskDate <= threeMonthsLater;
     });
 
-    const tbody = document.getElementById('taskTableBody');
-    tbody.innerHTML = '';
-    filteredTasks.forEach((task, index) => {
-        const row = document.createElement('tr');
-        row.style.backgroundColor = task.color || '#ffffff'; // تطبيق اللون
-        row.innerHTML = `
-            <td>${formatToHijri(task.day)}</td>
-            <td>${formatTimeTo12Hour(task.time)}</td>
-            <td>${task.type}</td>
-            <td>${task.location}</td>
-            <td>${task.required}</td>
-            <td>${task.group}</td>
-            <td>
-                <button onclick="editTask(${index}, 'index.html')">تعديل</button>
-                <button onclick="deleteTask(${index})">حذف</button>
-                <input type="color" value="${task.color || '#ffffff'}" onchange="changeColor(${index}, this.value)">
-            </td>
+    const content = document.getElementById('content');
+    content.innerHTML = '';
+    const groupedTasks = groupTasksByDate(filteredTasks);
+    Object.keys(groupedTasks).sort().forEach(date => {
+        const tasksForDate = groupedTasks[date];
+        const container = document.createElement('div');
+        container.className = 'task-table-container';
+
+        const title = document.createElement('h3');
+        title.className = 'task-table-title';
+        title.textContent = `جدول المهام ليوم ${getDayName(date)} الموافق ${formatToHijri(date)}`;
+        container.appendChild(title);
+
+        const table = document.createElement('table');
+        table.innerHTML = `
+            <thead>
+                <tr>
+                    <th>اليوم والتاريخ</th>
+                    <th>الساعة</th>
+                    <th>نوع المهمة</th>
+                    <th>موقع المهمة</th>
+                    <th>المطلوب</th>
+                    <th>المجموعة</th>
+                    <th>إجراءات</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
         `;
-        tbody.appendChild(row);
+        const tbody = table.querySelector('tbody');
+        tasksForDate.forEach((task, index) => {
+            const globalIndex = tasks.indexOf(task);
+            const row = document.createElement('tr');
+            row.style.backgroundColor = task.color || '#ffffff';
+            row.innerHTML = `
+                <td>${getDayName(date)} ${formatToHijri(date)}</td>
+                <td>${formatTimeTo12Hour(task.time)}</td>
+                <td>${task.type}</td>
+                <td>${task.location}</td>
+                <td>${task.required}</td>
+                <td>${task.group}</td>
+                <td>
+                    <button onclick="editTask(${globalIndex}, 'index.html')">تعديل</button>
+                    <button onclick="deleteTask(${globalIndex})">حذف</button>
+                    <input type="color" value="${task.color || '#ffffff'}" onchange="changeColor(${globalIndex}, this.value)">
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+        container.appendChild(table);
+        content.appendChild(container);
     });
 }
 
 // تحميل البيانات حسب الصفحة
 window.onload = function() {
-    // تحديث البيانات من Local Storage عند تحميل أي صفحة
     tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-    // استدعاء الدالة المناسبة بناءً على الصفحة
-    renderTable(); // للصفحة الرئيسية
-    renderVariableTasks(); // لصفحة المهام المتغيرة
-    loadEditTask(); // تحميل بيانات التعديل إذا وجدت
+    renderTable();
+    renderVariableTasks();
+    loadEditTask();
 };
