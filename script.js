@@ -50,6 +50,7 @@ function renderTable() {
     if (!content) return;
     content.innerHTML = ''; // تنظيف المحتوى
 
+    // الجدول الأول: جميع المهام
     const groupedTasks = groupTasksByDate(tasks);
     Object.keys(groupedTasks).sort().forEach(date => {
         const tasksForDate = groupedTasks[date];
@@ -102,8 +103,8 @@ function renderTable() {
         content.appendChild(container);
     });
 
-    // إضافة التعليمات والعناوين الإضافية بعد الجداول مع المحاذاة إلى اليمين
-    const extraContent = `
+    // إضافة التعليمات
+    const instructionsContent = `
         <h2>ص/ ضباط خفر</h2>
         <h2>رقباء الرسايا</h2>
         <h2>ص/ للعمليات</h2>
@@ -128,10 +129,66 @@ function renderTable() {
                 <li> عدم تشغيل السيفتي أثناء التوجه للموقع والمغادرة منه. </li>
             </ul>
         </div>
-        <h2 class="right-align">قائد قوة المهمات و الواجبات الخاصة</h2>
-        <h2 class="right-align">عقيد / فيصل بن خالد النفيسة</h2>
     `;
-    content.insertAdjacentHTML('beforeend', extraContent);
+    content.insertAdjacentHTML('beforeend', instructionsContent);
+
+    // الجدول الثاني: المهام المتغيرة
+    const variableTasks = tasks.filter(task => !task.isFixed);
+    if (variableTasks.length > 0) {
+        const variableContainer = document.createElement('div');
+        variableContainer.className = 'task-table-container';
+
+        const variableTitle = document.createElement('h3');
+        variableTitle.className = 'task-table-title';
+        variableTitle.textContent = 'جدول المهام المتغيرة';
+        variableContainer.appendChild(variableTitle);
+
+        const variableTable = document.createElement('table');
+        variableTable.innerHTML = `
+            <thead>
+                <tr>
+                    <th>اليوم والتاريخ</th>
+                    <th>الساعة</th>
+                    <th>نوع المهمة</th>
+                    <th>موقع المهمة</th>
+                    <th>المطلوب</th>
+                    <th>المجموعة</th>
+                    <th>إجراءات</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        `;
+        const variableTbody = variableTable.querySelector('tbody');
+        variableTasks.forEach((task, index) => {
+            const globalIndex = tasks.indexOf(task);
+            const row = document.createElement('tr');
+            row.style.backgroundColor = task.color || '#ffffff';
+            row.innerHTML = `
+                <td>${getDayName(task.day)} ${formatToHijri(task.day)}</td>
+                <td>${formatTimeTo12Hour(task.time)}</td>
+                <td>${task.type}</td>
+                <td>${task.location}</td>
+                <td>${task.required}</td>
+                <td>${task.group}</td>
+                <td>
+                    <button onclick="editTask(${globalIndex}, 'index.html')">تعديل</button>
+                    <button onclick="deleteTask(${globalIndex})">حذف</button>
+                    <input type="color" value="${task.color || '#ffffff'}" onchange="changeColor(${globalIndex}, this.value)">
+                </td>
+            `;
+            variableTbody.appendChild(row);
+        });
+        variableContainer.appendChild(variableTable);
+        content.appendChild(variableContainer);
+    }
+
+    // إضافة النصوص الختامية محاذاة إلى اليمين
+    const closingContent = `
+        <h2 class="right-align">قائد قوة المهمات الخاصة</h2>
+        <h2 class="right-align">عقيد /</h2>
+        <h2 class="right-align">فيصل بن خالد النفيسة</h2>
+    `;
+    content.insertAdjacentHTML('beforeend', closingContent);
 
     saveToLocalStorage();
 }
@@ -268,24 +325,22 @@ function sendToManager() {
     const mainTitle = document.querySelector('body > h2.main-title');
     if (mainTitle) {
         const clonedTitle = mainTitle.cloneNode(true);
-        clonedTitle.className = 'main-title'; // التأكد من وجود الكلاس
+        clonedTitle.className = 'main-title';
         pdfContent.appendChild(clonedTitle);
     }
 
-    // إضافة الجداول مع العناوين
+    // الجدول الأول: جميع المهام
     const groupedTasks = groupTasksByDate(tasks);
     Object.keys(groupedTasks).sort().forEach(date => {
         const tasksForDate = groupedTasks[date];
         const container = document.createElement('div');
         container.className = 'task-table-container';
 
-        // إضافة العنوان
         const title = document.createElement('h3');
         title.className = 'task-table-title';
         title.textContent = `جدول المهام ليوم ${getDayName(date)} الموافق ${formatToHijri(date)}`;
         container.appendChild(title);
 
-        // إنشاء الجدول بدون عمود الإجراءات
         const table = document.createElement('table');
         table.style.width = '100%';
         table.style.borderCollapse = 'collapse';
@@ -320,8 +375,8 @@ function sendToManager() {
         pdfContent.appendChild(container);
     });
 
-    // إضافة التعليمات والعناوين الإضافية مع المحاذاة إلى اليمين
-    const extraContent = `
+    // إضافة التعليمات
+    const instructionsContent = `
         <h2>ص/ ضباط خفر</h2>
         <h2>رقباء الرسايا</h2>
         <h2>ص/ للعمليات</h2>
@@ -346,24 +401,71 @@ function sendToManager() {
                 <li> عدم تشغيل السيفتي أثناء التوجه للموقع والمغادرة منه. </li>
             </ul>
         </div>
-        <h2 class="right-align">قائد قوة المهمات و الواجبات الخاصة</h2>
-        <h2 class="right-align">عقيد / فيصل بن خالد النفيسة</h2>
     `;
-    pdfContent.insertAdjacentHTML('beforeend', extraContent);
+    pdfContent.insertAdjacentHTML('beforeend', instructionsContent);
 
-    // إضافة رابط "عرض المهام المتغيرة"
-    const variableLink = document.querySelector('a[href="variable_tasks.html"]');
-    if (variableLink) pdfContent.appendChild(variableLink.cloneNode(true));
+    // الجدول الثاني: المهام المتغيرة
+    const variableTasks = tasks.filter(task => !task.isFixed);
+    if (variableTasks.length > 0) {
+        const variableContainer = document.createElement('div');
+        variableContainer.className = 'task-table-container';
+
+        const variableTitle = document.createElement('h3');
+        variableTitle.className = 'task-table-title';
+        variableTitle.textContent = 'جدول المهام المتغيرة';
+        variableContainer.appendChild(variableTitle);
+
+        const variableTable = document.createElement('table');
+        variableTable.style.width = '100%';
+        variableTable.style.borderCollapse = 'collapse';
+        variableTable.innerHTML = `
+            <thead>
+                <tr>
+                    <th>اليوم والتاريخ</th>
+                    <th>الساعة</th>
+                    <th>نوع المهمة</th>
+                    <th>موقع المهمة</th>
+                    <th>المطلوب</th>
+                    <th>المجموعة</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        `;
+        const variableTbody = variableTable.querySelector('tbody');
+        variableTasks.forEach(task => {
+            const row = document.createElement('tr');
+            row.style.backgroundColor = task.color || '#ffffff';
+            row.innerHTML = `
+                <td>${getDayName(task.day)} ${formatToHijri(task.day)}</td>
+                <td>${formatTimeTo12Hour(task.time)}</td>
+                <td>${task.type}</td>
+                <td>${task.location}</td>
+                <td>${task.required}</td>
+                <td>${task.group}</td>
+            `;
+            variableTbody.appendChild(row);
+        });
+        variableContainer.appendChild(variableTable);
+        pdfContent.appendChild(variableContainer);
+    }
+
+    // إضافة النصوص الختامية محاذاة إلى اليمين
+    const closingContent = `
+        <h2 class="right-align">قائد قوة المهمات الخاصة</h2>
+        <h2 class="right-align">عقيد /</h2>
+        <h2 class="right-align">فيصل بن خالد النفيسة</h2>
+    `;
+    pdfContent.insertAdjacentHTML('beforeend', closingContent);
 
     // الانتظار قليلاً لضمان تحميل المحتوى قبل التقاطه
     setTimeout(() => {
         html2canvas(pdfContent, {
-            scale: 2, // زيادة الدقة
-            width: pdfContent.scrollWidth || 800, // ضمان العرض
-            height: pdfContent.scrollHeight || 1000, // ضمان الارتفاع
-            logging: true // تفعيل السجل للتصحيح
+            scale: 2,
+            width: pdfContent.scrollWidth || 800,
+            height: pdfContent.scrollHeight || 1000,
+            logging: true
         }).then((canvas) => {
-            console.log('Canvas Width:', canvas.width, 'Canvas Height:', canvas.height); // تصحيح
+            console.log('Canvas Width:', canvas.width, 'Canvas Height:', canvas.height);
             if (!canvas || canvas.width === 0 || canvas.height === 0) {
                 throw new Error('الـ Canvas فارغ أو غير صالح.');
             }
