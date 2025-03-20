@@ -136,7 +136,7 @@ function renderTable() {
     const variableTasks = tasks.filter(task => !task.isFixed);
     if (variableTasks.length > 0) {
         const variableContainer = document.createElement('div');
-        variableContainer.className = 'task-table-container';
+        variableContainer.className = 'variable-table-container'; // تغيير الكلاس
 
         const variableTitle = document.createElement('h3');
         variableTitle.className = 'task-table-title';
@@ -408,7 +408,7 @@ function sendToManager() {
     const variableTasks = tasks.filter(task => !task.isFixed);
     if (variableTasks.length > 0) {
         const variableContainer = document.createElement('div');
-        variableContainer.className = 'task-table-container';
+        variableContainer.className = 'variable-table-container'; // تغيير الكلاس
 
         const variableTitle = document.createElement('h3');
         variableTitle.className = 'task-table-title';
