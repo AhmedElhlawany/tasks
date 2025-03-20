@@ -129,7 +129,7 @@ function renderTable() {
             </ul>
         </div>
         <h2 class="right-align">قائد قوة المهمات و الواجبات الخاصة</h2>
-        <h2 class="right-align">عقيد /</h2>
+        <h2 class="right-align">عقيد / فيصل بن خالد النفيسة</h2>
     `;
     content.insertAdjacentHTML('beforeend', extraContent);
 
@@ -347,7 +347,7 @@ function sendToManager() {
             </ul>
         </div>
         <h2 class="right-align">قائد قوة المهمات و الواجبات الخاصة</h2>
-        <h2 class="right-align">عقيد / فيصل بن خالد النفيسه</h2>
+        <h2 class="right-align">عقيد / فيصل بن خالد النفيسة</h2>
     `;
     pdfContent.insertAdjacentHTML('beforeend', extraContent);
 
