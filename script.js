@@ -218,7 +218,7 @@ function loadEditTask() {
         document.getElementById('required').value = task.required;
         document.getElementById('group').value = task.group;
         document.getElementById('isFixed').checked = task.isFixed;
-        tasks.splice(index, 1);
+        tasks.splice(editIndex, 1);
         renderTable();
         localStorage.removeItem('editIndex');
     }
@@ -264,9 +264,13 @@ function sendToManager() {
     const topList = document.querySelector('body > ul');
     if (topList) pdfContent.appendChild(topList.cloneNode(true));
 
-    // إضافة العنوان الرئيسي
-    const mainTitle = document.querySelector('body > h2');
-    if (mainTitle) pdfContent.appendChild(mainTitle.cloneNode(true));
+    // إضافة العنوان الرئيسي مع الكلاس main-title
+    const mainTitle = document.querySelector('body > h2.main-title');
+    if (mainTitle) {
+        const clonedTitle = mainTitle.cloneNode(true);
+        clonedTitle.className = 'main-title'; // التأكد من وجود الكلاس
+        pdfContent.appendChild(clonedTitle);
+    }
 
     // إضافة الجداول مع العناوين
     const groupedTasks = groupTasksByDate(tasks);
@@ -343,7 +347,7 @@ function sendToManager() {
             </ul>
         </div>
         <h2 class="right-align">قائد قوة المهمات و الواجبات الخاصة</h2>
-        <h2 class="right-align">عقيد /</h2>
+        <h2 class="right-align">عقيد / فيصل بن خالد النفيسه</h2>
     `;
     pdfContent.insertAdjacentHTML('beforeend', extraContent);
 
