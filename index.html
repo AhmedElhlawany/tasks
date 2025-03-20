@@ -55,7 +55,11 @@
             font-weight: bold;
         }
         .right-align {
-            text-align: left; /* محاذاة إلى اليمين في اتجاه RTL */
+            text-align: left;
+            padding-left: 40px; /* محاذاة إلى اليمين في اتجاه RTL */
+        }
+        .right-align:nth-last-child(1) {
+            padding-left: 200px; /* إلغاء المحاذاة للعنصر الأخير */
         }
     </style>
 </head>
