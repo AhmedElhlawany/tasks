@@ -57,10 +57,10 @@ function renderTable() {
         const container = document.createElement('div');
         container.className = 'task-table-container';
 
-        // إضافة العنوان
+        // إضافة العنوان الرئيسي المعدل
         const title = document.createElement('h3');
         title.className = 'task-table-title';
-        title.textContent = `جدول المهام ليوم ${getDayName(date)} الموافق ${formatToHijri(date)}`;
+        title.textContent = `بيان بالمهام المكلفة بها قوة المهمات والواجبات الخاصة ليوم ${getDayName(date)} الموافق ${formatToHijri(date)}`;
         container.appendChild(title);
 
         // إنشاء الجدول
@@ -136,11 +136,13 @@ function renderTable() {
     const variableTasks = tasks.filter(task => !task.isFixed);
     if (variableTasks.length > 0) {
         const variableContainer = document.createElement('div');
-        variableContainer.className = 'variable-table-container'; // تغيير الكلاس
+        variableContainer.className = 'variable-table-container';
 
+        // إضافة العنوان الرئيسي المعدل بناءً على أول مهمة متغيرة
+        const firstVariableTaskDate = variableTasks[0].day;
         const variableTitle = document.createElement('h3');
         variableTitle.className = 'task-table-title';
-        variableTitle.textContent = 'جدول المهام المتغيرة';
+        variableTitle.textContent = `بيان بالمهام المكلفة بها قوة المهمات والواجبات الخاصة ليوم ${getDayName(firstVariableTaskDate)} الموافق ${formatToHijri(firstVariableTaskDate)}`;
         variableContainer.appendChild(variableTitle);
 
         const variableTable = document.createElement('table');
@@ -321,14 +323,6 @@ function sendToManager() {
     const topList = document.querySelector('body > ul');
     if (topList) pdfContent.appendChild(topList.cloneNode(true));
 
-    // إضافة العنوان الرئيسي مع الكلاس main-title
-    const mainTitle = document.querySelector('body > h2.main-title');
-    if (mainTitle) {
-        const clonedTitle = mainTitle.cloneNode(true);
-        clonedTitle.className = 'main-title';
-        pdfContent.appendChild(clonedTitle);
-    }
-
     // الجدول الأول: جميع المهام
     const groupedTasks = groupTasksByDate(tasks);
     Object.keys(groupedTasks).sort().forEach(date => {
@@ -336,9 +330,10 @@ function sendToManager() {
         const container = document.createElement('div');
         container.className = 'task-table-container';
 
+        // إضافة العنوان الرئيسي المعدل
         const title = document.createElement('h3');
         title.className = 'task-table-title';
-        title.textContent = `جدول المهام ليوم ${getDayName(date)} الموافق ${formatToHijri(date)}`;
+        title.textContent = `بيان بالمهام المكلفة بها قوة المهمات والواجبات الخاصة ليوم ${getDayName(date)} الموافق ${formatToHijri(date)}`;
         container.appendChild(title);
 
         const table = document.createElement('table');
@@ -408,11 +403,13 @@ function sendToManager() {
     const variableTasks = tasks.filter(task => !task.isFixed);
     if (variableTasks.length > 0) {
         const variableContainer = document.createElement('div');
-        variableContainer.className = 'variable-table-container'; // تغيير الكلاس
+        variableContainer.className = 'variable-table-container';
 
+        // إضافة العنوان الرئيسي المعدل بناءً على أول مهمة متغيرة
+        const firstVariableTaskDate = variableTasks[0].day;
         const variableTitle = document.createElement('h3');
         variableTitle.className = 'task-table-title';
-        variableTitle.textContent = 'جدول المهام المتغيرة';
+        variableTitle.textContent = `بيان بالمهام المكلفة بها قوة المهمات والواجبات الخاصة ليوم ${getDayName(firstVariableTaskDate)} الموافق ${formatToHijri(firstVariableTaskDate)}`;
         variableContainer.appendChild(variableTitle);
 
         const variableTable = document.createElement('table');
@@ -544,7 +541,7 @@ function filterTasks() {
 
         const title = document.createElement('h3');
         title.className = 'task-table-title';
-        title.textContent = `جدول المهام ليوم ${getDayName(date)} الموافق ${formatToHijri(date)}`;
+        title.textContent = `بيان بالمهام المكلفة بها قوة المهمات والواجبات الخاصة ليوم ${getDayName(date)} الموافق ${formatToHijri(date)}`;
         container.appendChild(title);
 
         const table = document.createElement('table');
